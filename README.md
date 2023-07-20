@@ -19,5 +19,5 @@ TODO:
 - [] Test fine-tune llamav2 with 10 rows of SQuAD v2 to see if the fine tuning pipeline is working (Criteria: Can be used anywhere with 4bit, 8bit, full fine-tune)
     - [] Test pipeline by Younes Belkada for guanaco fine-tuning
     - [] Test scale llm fine tuning library
-    - [] ~~Test Autotrain by HF for fine-tuning llama~~
+    - [] Trying this out - Test Autotrain by HF for fine-tuning llama
     - [] ~~Test Philip Scmidt's Amazon Sagemaker guide to fine-tune~~
