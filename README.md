@@ -1,8 +1,10 @@
 # llm_cookbooks
 LLM Anarchist's Cookbook
+
 Focus on freedom of usage of LLMs as well as freeing the LLMs from RLHF lobotomy
 
 [20/07/23]
+
 Started prepping my RAG fine-tuning setup.
 
 Going to fine-tune llama2 for retrieval augmented generation.
@@ -18,6 +20,13 @@ RAG isn't simple as it seems and there are many rules to follow and many things 
 TODO:
 - [] Test fine-tune llamav2 with 10 rows of SQuAD v2 to see if the fine tuning pipeline is working (Criteria: Can be used anywhere with 4bit, 8bit, full fine-tune)
     - [] Test pipeline by Younes Belkada for guanaco fine-tuning
+      - [] The training losses drop to zero after 10 steps for some reason I don't understand
     - [] Test scale llm fine tuning library
     - [] Trying this out - Test Autotrain by HF for fine-tuning llama
+      - [] Facing issue with autotrain advanced installation
     - [] ~~Test Philip Scmidt's Amazon Sagemaker guide to fine-tune~~
+
+I tweaked existing code_instructions_120k dataset on HF to match alpaca style dataset.
+
+[21/07/23]
+
