@@ -36,9 +36,10 @@ So I made something useful today and that is a reward in itself.
 I prepared a 122k alpaca style coding instruction dataset and fine-tuned the model with it for 200 steps.
 As a result, it seems to be doing very well.
 
+[22/07/23]
 I've a few things in mind and after that this will be more valuable.
 - [] Add a chat UI
-- [] Creating a merged model, currently the repo contains lora adapters that will need to loaded on top of Meta's llama2 so access gating is an issue
+- [x] Creating a merged model, currently the repo contains lora adapters that will need to loaded on top of Meta's llama2 so access gating is an issue
 - [] I'll quantize these, possibly tonight or tomorrow in the day, then it can be run locally with 4G ram
 - [] I've used alpaca style instruction tuning, I'll switch to llama2 style [INST]<<SYS>> style and see if it improves anything
 - [] HumanEval report and checking for any training data leaks
