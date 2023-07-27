@@ -5,16 +5,19 @@ from transformers import (
     PreTrainedTokenizer,
 )
 from core import filter_code, run_eval, fix_indents
+import os
 import torch
 
-# add hugging face access token here
-TOKEN = "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"
+# sample huggingface token
+TOKEN = ""
 
 def generate_batch_completion(
     model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prompt, batch_size
 ) -> list[str]:
     input_batch = [prompt for _ in range(batch_size)]
     inputs = tokenizer(input_batch, return_tensors="pt").to(model.device)
+    if 'token_type_ids' in inputs:
+        del inputs['token_type_ids']
     input_ids_cutoff = inputs.input_ids.size(dim=1)
 
     generated_ids = model.generate(
