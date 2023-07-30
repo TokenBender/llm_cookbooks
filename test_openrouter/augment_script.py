@@ -8,7 +8,7 @@ load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
 YOUR_SITE_URL = os.getenv('YOUR_SITE_URL')
-MODEL_ACRONYM = 'GPT4'
+MODEL_ACRONYM = 'BISON'
 
 MODEL_MAP = {
     'GPT3TURBO': 'openai/gpt-3.5-turbo',
@@ -43,7 +43,7 @@ def process_row(row):
     # This is where you would add your own processing logic.
 
     messages = [
-        {'role': 'system', 'content': 'You are a helpful assistant designed to serve the user.'},
+        {'role': 'system', 'content': 'You are a helpful assistant designed to take in rows of a dataset from a user and .'},
         {'role': 'user', 'content': row['column1']}
     ]
 
