@@ -27,65 +27,91 @@ MODEL_MAP = {
     'CLAUDEV12': 'anthropic/claude-1.2',
 }
 
+# Set up headers for the API request
 headers = {
     'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
     'HTTP-Referer': 'https://www.google.com/'
 }
 
-# Initial system message
-messages = [{'role': 'system', 'content': 'You are a helpful assistant.'}]
-
+# Function to combine instruction and response
 def combine_text(instruction, response):
     combined_text = f"You are a helpful coding assistant.\n\n### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
     return combined_text
 
+# Set up Streamlit interface
 st.title('JSONL File Processing')
 
+# Form for user input
 with st.form(key='my_form'):
+    # User selects the model
     model_choice = st.selectbox('Select model', list(MODEL_MAP.keys()))
     MODEL = MODEL_MAP[model_choice]
 
+    # User uploads the JSONL file
     uploaded_file = st.file_uploader("Upload JSONL file", type=['jsonl'])
 
+    # User enters the number of lines to process
     num_lines = st.number_input('Number of lines to process', min_value=1, step=1, value=5)
+
+    # User enters the line to start processing from
     start_line = st.number_input('Start processing from line', min_value=0, step=1, value=0)
 
+    # User enters the name of the output file
     output_file = st.text_input('Output file name', 'output.jsonl')
 
+    # User enters the prompt for the assistant
+    prompt = st.text_area('Enter the prompt for the assistant', 'You are a helpful coding assistant.')
+
+    # User submits the form
     submit_button = st.form_submit_button(label='Submit')
 
+# If the form is submitted
 if submit_button:
+    # If the user uploaded a file
     if uploaded_file is not None:
         data_list = []
-        
+
+        # Loop through the lines in the file
         for i, line in enumerate(uploaded_file):
+            # If the current line is before the start line, skip it
             if i < start_line:
                 continue
+            # If we've processed the specified number of lines, stop
             if len(data_list) >= num_lines:
                 break
+            # Add the line to the data list
             data_list.append(json.loads(line))
 
+        # Convert the data list to a DataFrame
         df = pd.DataFrame(data_list)
+
+        # Display the DataFrame
         st.write(df)
-        
+
         # Create a progress bar
         progress_bar = st.progress(0)
-        
+
+        # Loop through the records in the DataFrame
         for i, record in df.iterrows():
             # Update the progress bar
             progress_bar.progress((i + 1) / len(df))
-            
+
             # Submit the instruction as the user message
             user_message = record['instruction']
-            messages.append({'role': 'user', 'content': user_message})
 
+            # Set system message
+            messages = [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': user_message}]
+
+            # Prepare the data for the API request
             data = {
                 'model': MODEL,
                 'messages': messages
             }
 
+            # Send the API request
             response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, data=json.dumps(data))
 
+            # Try to parse the response
             try:
                 response_json = response.json()
                 assistant_message = response_json['choices'][0]['message']['content']
@@ -96,9 +122,11 @@ if submit_button:
                 # Add the combined text field
                 df.at[i, 'text'] = combine_text(record['instruction'], assistant_message)
 
+            # If parsing the response fails
             except json.JSONDecodeError:
                 st.error("Failed to parse JSON response.")
-        
+
+        # Display the updated DataFrame
         st.write(df)
 
         # Convert DataFrame to JSONLines string
@@ -107,5 +135,6 @@ if submit_button:
         # Encode JSONLines string to bytes, then to Base64
         b64 = base64.b64encode(jsonl.encode()).decode()
 
+        # Create a download link for the output file
         href = f'<a href="data:file/json;base64,{b64}" download="{output_file}">Download {output_file}</a>'
         st.markdown(href, unsafe_allow_html=True)
