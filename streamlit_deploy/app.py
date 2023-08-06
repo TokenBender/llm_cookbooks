@@ -66,7 +66,7 @@ with st.form(key='my_form'):
     num_lines = st.number_input('Number of lines to process', min_value=1, step=1, value=5)
 
     # User enters the line to start processing from
-    start_line = st.number_input('Start processing from line', min_value=1, step=1, value=0)
+    start_line = st.number_input('Start processing from line', min_value=1, step=1, value=1)
 
     # User enters the name of the output file
     output_file = st.text_input('Output file name', 'output.jsonl')
