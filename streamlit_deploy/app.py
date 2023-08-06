@@ -15,7 +15,7 @@ MODEL_MAP = {
     'GPT3TURBO': 'openai/gpt-3.5-turbo',
     'GPT3TURBO16K': 'openai/gpt-3.5-turbo-16k',
     'GPT4': 'openai/gpt-4',
-    'GPT432K': 'openai/gpt-4-32k',
+    'GPT4-32K': 'openai/gpt-4-32k',
     'SHAPE': 'openai/shap-e',
     'BISON': 'google/palm-2-chat-bison',
     'CODEBISON': 'google/palm-2-codechat-bison',
