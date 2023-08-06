@@ -1,15 +1,16 @@
-import os
-from dotenv import load_dotenv
 import requests
 import json
-import pandas as pd
+import os
+import argparse
+from dotenv import load_dotenv
 
 load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
-YOUR_SITE_URL = os.getenv('YOUR_SITE_URL')
-MODEL_ACRONYM = 'BISON'
+YOUR_SITE_URL = 'rimer.world'  # replace 'your-site-url' with your actual site URL
+MODEL_ACRONYM = 'GPT4'  # replace with your chosen model acronym
 
+# Map acronyms to full model names
 MODEL_MAP = {
     'GPT3TURBO': 'openai/gpt-3.5-turbo',
     'GPT3TURBO16K': 'openai/gpt-3.5-turbo-16k',
@@ -30,53 +31,58 @@ MODEL = MODEL_MAP[MODEL_ACRONYM]
 
 headers = {
     'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
-    'HTTP-Referer': YOUR_SITE_URL
+    'HTTP-Referer': 'https://www.google.com/'
 }
 
-# Specify the input columns
-input_columns = ['column1', 'column2']
+# Initial system message
+messages = [{'role': 'system', 'content': 'You are a helpful assistant designed to serve the user.'}]
 
-# Define the processing function
-def process_row(row):
-    # This function takes a row of data and returns a dictionary of {column_name: new_value} pairs.
-    # The new values will be used to update the row.
-    # This is where you would add your own processing logic.
+def combine_text(record):
+    instruction = record['instruction']
+    response = record['output']
+    combined_text = f"You are a helpful coding assistant, below is an instruction that you have to complete by analysing user request and planning how to complete it. Then respond as required step-by-step.\n\n### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
+    return combined_text
 
-    messages = [
-        {'role': 'system', 'content': 'You are a helpful assistant designed to take in rows of a dataset from a user and .'},
-        {'role': 'user', 'content': row['column1']}
-    ]
+parser = argparse.ArgumentParser()
+parser.add_argument('infile', help='Input JSONL file')
+parser.add_argument('outfile', help='Output JSONL file')
+parser.add_argument('--lines', type=int, help='Number of lines to read from the input file')
+args = parser.parse_args()
 
-    data = {
-        'model': MODEL,
-        'messages': messages
-    }
+with open(args.infile, 'r') as infile, open(args.outfile, 'w') as outfile:
+    for i, line in enumerate(infile):
+        # Stop reading after the specified number of lines
+        if args.lines is not None and i >= args.lines:
+            break
 
-    response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, data=json.dumps(data))
+        record = json.loads(line)
+        
+        # Submit the instruction as the user message
+        user_message = record['instruction']
+        messages.append({'role': 'user', 'content': user_message})
+        
+        data = {
+            'model': MODEL,
+            'messages': messages
+        }
+        
+        response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, data=json.dumps(data))
+        
+        try:
+            response_json = response.json()
+            # Extract the assistant's message from the response
+            assistant_message = response_json['choices'][0]['message']['content']
+            # Add the assistant's message to the conversation
+            messages.append({'role': 'assistant', 'content': assistant_message})
 
-    try:
-        response_json = response.json()
-        assistant_message = response_json['choices'][0]['message']['content']
-
-        # Return a dictionary of {column_name: new_value} pairs
-        return {'column1': assistant_message}
-
-    except json.JSONDecodeError:
-        print("Failed to parse JSON response.")
-        print("Status code:", response.status_code)
-        print("Response text:", response.text)
-        return {}
-
-# Use chunksize to load and process data in batches
-chunksize = 4
-chunks = []
-for chunk in pd.read_csv('data.csv', chunksize=chunksize):
-    for idx, row in chunk.iterrows():
-        # Use the processing function to update the row
-        chunk.loc[idx, input_columns] = process_row(row)
-
-    chunks.append(chunk)
-
-# Concatenate all chunks and save to a new JSON file
-df = pd.concat(chunks)
-df.to_json('data_augmented.json', orient='records', lines=True)
+            # Update the record with the assistant's response
+            record['output'] = assistant_message
+            # Add the combined text field
+            record['text'] = combine_text(record)
+            # Write the updated record to the output file
+            outfile.write(json.dumps(record) + '\n')
+            
+        except json.JSONDecodeError:
+            print("Failed to parse JSON response.")
+            print("Status code:", response.status_code)
+            print("Response text:", response.text)

@@ -53,3 +53,6 @@ htmlcov/
 .tox
 .cache
 .pytest_cache
+
+# Ignore dataset folder
+dataset/

@@ -30,7 +30,7 @@ MODEL = MODEL_MAP[MODEL_ACRONYM]
 
 headers = {
     'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
-    'HTTP-Referer': YOUR_SITE_URL  # To identify your app
+    'HTTP-Referer': 'https://www.google.com/'
 }
 
 # Initial system message
@@ -55,6 +55,7 @@ while True:
 
     try:
         response_json = response.json()
+        print(response_json)
 
         # Extract the assistant's message from the response and print it
         assistant_message = response_json['choices'][0]['message']['content']
