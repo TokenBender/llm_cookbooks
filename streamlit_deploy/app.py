@@ -41,14 +41,17 @@ def combine_text(instruction, response):
 # Set up Streamlit interface
 st.title('JSONL File Processing')
 
+# User selects the processing mode
+processing_mode = st.sidebar.selectbox("Choose the processing mode", ["With AI assistant", "Without AI assistant"])
+
+# User uploads the JSONL file
+uploaded_file = st.file_uploader("Upload JSONL file", type=['jsonl'])
+
 # Form for user input
 with st.form(key='my_form'):
     # User selects the model
     model_choice = st.selectbox('Select model', list(MODEL_MAP.keys()))
     MODEL = MODEL_MAP[model_choice]
-
-    # User uploads the JSONL file
-    uploaded_file = st.file_uploader("Upload JSONL file", type=['jsonl'])
 
     # User enters the number of lines to process
     num_lines = st.number_input('Number of lines to process', min_value=1, step=1, value=5)
@@ -61,6 +64,12 @@ with st.form(key='my_form'):
 
     # User enters the prompt for the assistant
     prompt = st.text_area('Enter the prompt for the assistant', 'You are a helpful coding assistant.')
+
+    # If the user chose not to use the AI assistant and a file has been uploaded, they select the instruction and response columns
+    if processing_mode == "Without AI assistant" and uploaded_file is not None:
+        df_preview = pd.read_json(uploaded_file, lines=True, nrows=5)
+        instruction_column = st.selectbox('Select the instruction column', df_preview.columns)
+        response_column = st.selectbox('Select the response column', df_preview.columns)
 
     # User submits the form
     submit_button = st.form_submit_button(label='Submit')
@@ -91,40 +100,55 @@ if submit_button:
         # Create a progress bar
         progress_bar = st.progress(0)
 
-        # Loop through the records in the DataFrame
-        for i, record in df.iterrows():
-            # Update the progress bar
-            progress_bar.progress((i + 1) / len(df))
+        # If the user chose to use the AI assistant
+        if processing_mode == "With AI assistant":
+            for i, record in df.iterrows():
+                # Update the progress bar
+                progress_bar.progress((i + 1) / len(df))
 
-            # Submit the instruction as the user message
-            user_message = record['instruction']
+                # Submit the instruction as the user message
+                user_message = record['instruction']
 
-            # Set system message
-            messages = [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': user_message}]
+                # Set system message
+                messages = [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': user_message}]
 
-            # Prepare the data for the API request
-            data = {
-                'model': MODEL,
-                'messages': messages
-            }
+                # Prepare the data for the API request
+                data = {
+                    'model': MODEL,
+                    'messages': messages
+                }
 
-            # Send the API request
-            response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, data=json.dumps(data))
+                # Send the API request
+                response = requests.post('https://openrouter.ai/api/v1/chat/completions', headers=headers, data=json.dumps(data))
 
-            # Try to parse the response
-            try:
-                response_json = response.json()
-                assistant_message = response_json['choices'][0]['message']['content']
-                messages.append({'role': 'assistant', 'content': assistant_message})
+                try:
+                    # Parse the response
+                    response_json = response.json()
 
-                # Update the record with the assistant's response
-                df.at[i, 'output'] = assistant_message
-                # Add the combined text field
-                df.at[i, 'text'] = combine_text(record['instruction'], assistant_message)
+                    # Get the assistant's message from the response
+                    assistant_message = response_json['choices'][0]['message']['content']
 
-            # If parsing the response fails
-            except json.JSONDecodeError:
-                st.error("Failed to parse JSON response.")
+                    # Add the assistant's message to the conversation
+                    messages.append({'role': 'assistant', 'content': assistant_message})
+
+                    # Update the record with the assistant's response
+                    df.at[i, 'output'] = assistant_message
+
+                    # Add the combined text field
+                    df.at[i, 'text'] = combine_text(record['instruction'], assistant_message)
+
+                # If parsing the response fails
+                except json.JSONDecodeError:
+                    st.error("Failed to parse JSON response.")
+
+        # If the user chose not to use the AI assistant
+        else:
+            for i, record in df.iterrows():
+                # Update the progress bar
+                progress_bar.progress((i + 1) / len(df))
+
+                # Combine the instruction and response into the "text" field
+                df.at[i, 'text'] = combine_text(record[instruction_column], record[response_column])
 
         # Display the updated DataFrame
         st.write(df)
