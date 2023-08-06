@@ -49,10 +49,6 @@ uploaded_file = st.file_uploader("Upload JSONL file", type=['jsonl'])
 
 # Form for user input
 with st.form(key='my_form'):
-    # User selects the model
-    model_choice = st.selectbox('Select model', list(MODEL_MAP.keys()))
-    MODEL = MODEL_MAP[model_choice]
-
     # User enters the number of lines to process
     num_lines = st.number_input('Number of lines to process', min_value=1, step=1, value=5)
 
@@ -62,8 +58,11 @@ with st.form(key='my_form'):
     # User enters the name of the output file
     output_file = st.text_input('Output file name', 'output.jsonl')
 
-    # User enters the prompt for the assistant
-    prompt = st.text_area('Enter the prompt for the assistant', 'You are a helpful coding assistant.')
+    # If the user chose to use the AI assistant, they enter the prompt for the assistant and select the model
+    if processing_mode == "With AI assistant":
+        prompt = st.text_area('Enter the prompt for the assistant', 'You are a helpful coding assistant.')
+        model_choice = st.selectbox('Select model', list(MODEL_MAP.keys()))
+        MODEL = MODEL_MAP[model_choice]
 
     # If the user chose not to use the AI assistant and a file has been uploaded, they select the instruction and response columns
     if processing_mode == "Without AI assistant" and uploaded_file is not None:
@@ -88,8 +87,11 @@ if submit_button:
             # If we've processed the specified number of lines, stop
             if len(data_list) >= num_lines:
                 break
-            # Add the line to the data list
-            data_list.append(json.loads(line))
+            # Try to add the line to the data list
+            try:
+                data_list.append(json.loads(line))
+            except json.JSONDecodeError:
+                st.error(f"Failed to parse JSON on line {i}. Skipping this line.")
 
         # Convert the data list to a DataFrame
         df = pd.DataFrame(data_list)
