@@ -5,6 +5,7 @@ import pandas as pd
 from dotenv import load_dotenv
 import base64
 import os
+import re
 
 load_dotenv()
 
@@ -25,6 +26,8 @@ MODEL_MAP = {
     'CLAUDEV1100K': 'anthropic/claude-v1-100k',
     'CLAUDEINSTANT1': 'anthropic/claude-instant-1.0',
     'CLAUDEV12': 'anthropic/claude-1.2',
+    'LLAMA2-13': 'meta-llama/llama-2-13b-chat',
+    'LLAMA2-70B': 'meta-llama/llama-2-70b-chat',
 }
 
 # Set up headers for the API request
@@ -37,6 +40,12 @@ headers = {
 def combine_text(instruction, response):
     combined_text = f"You are a helpful coding assistant.\n\n### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
     return combined_text
+
+# Function to check if a string contains Chinese characters
+def contains_chinese(text):
+    if re.search('[\u4e00-\u9fff]', text):
+        return True
+    return False
 
 # Set up Streamlit interface
 st.title('JSONL File Processing')
@@ -78,6 +87,8 @@ if submit_button:
     # If the user uploaded a file
     if uploaded_file is not None:
         data_list = []
+        instruction_key = 'instruction'
+        response_key = 'output'
 
         # Loop through the lines in the file
         for i, line in enumerate(uploaded_file):
@@ -89,7 +100,10 @@ if submit_button:
                 break
             # Try to add the line to the data list
             try:
-                data_list.append(json.loads(line))
+                record = json.loads(line)
+                # If the record does not contain Chinese characters, add it to the data list
+                if not contains_chinese(record[instruction_key]) and not contains_chinese(record[response_key]):
+                    data_list.append(record)
             except json.JSONDecodeError:
                 st.error(f"Failed to parse JSON on line {i}. Skipping this line.")
 
@@ -109,7 +123,7 @@ if submit_button:
                 progress_bar.progress((i + 1) / len(df))
 
                 # Submit the instruction as the user message
-                user_message = record['instruction']
+                user_message = record[instruction_key]
 
                 # Set system message
                 messages = [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': user_message}]
@@ -134,10 +148,10 @@ if submit_button:
                     messages.append({'role': 'assistant', 'content': assistant_message})
 
                     # Update the record with the assistant's response
-                    df.at[i, 'output'] = assistant_message
+                    df.at[i, response_key] = assistant_message
 
                     # Add the combined text field
-                    df.at[i, 'text'] = combine_text(record['instruction'], assistant_message)
+                    df.at[i, 'text'] = combine_text(record[instruction_key], assistant_message)
 
                 # If parsing the response fails
                 except json.JSONDecodeError:
@@ -145,12 +159,14 @@ if submit_button:
 
         # If the user chose not to use the AI assistant
         else:
+            instruction_key = instruction_column
+            response_key = response_column
             for i, record in df.iterrows():
                 # Update the progress bar
                 progress_bar.progress((i + 1) / len(df))
 
                 # Combine the instruction and response into the "text" field
-                df.at[i, 'text'] = combine_text(record[instruction_column], record[response_column])
+                df.at[i, 'text'] = combine_text(record[instruction_key], record[response_key])
 
         # Display the updated DataFrame
         st.write(df)
