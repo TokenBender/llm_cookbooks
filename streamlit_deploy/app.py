@@ -56,26 +56,30 @@ processing_mode = st.sidebar.selectbox("Choose the processing mode", ["With AI a
 # User uploads the JSONL file
 uploaded_file = st.file_uploader("Upload JSONL file", type=['jsonl'])
 
+# If a file has been uploaded
+if uploaded_file is not None:
+    df_preview = pd.read_json(uploaded_file, lines=True, nrows=5)
+
 # Form for user input
 with st.form(key='my_form'):
     # User enters the number of lines to process
     num_lines = st.number_input('Number of lines to process', min_value=1, step=1, value=5)
 
     # User enters the line to start processing from
-    start_line = st.number_input('Start processing from line', min_value=0, step=1, value=0)
+    start_line = st.number_input('Start processing from line', min_value=1, step=1, value=0)
 
     # User enters the name of the output file
     output_file = st.text_input('Output file name', 'output.jsonl')
 
     # If the user chose to use the AI assistant, they enter the prompt for the assistant and select the model
-    if processing_mode == "With AI assistant":
+    if processing_mode == "With AI assistant" and uploaded_file is not None:
         prompt = st.text_area('Enter the prompt for the assistant', 'You are a helpful coding assistant.')
         model_choice = st.selectbox('Select model', list(MODEL_MAP.keys()))
         MODEL = MODEL_MAP[model_choice]
+        user_message_column = st.selectbox('Select the user message column', df_preview.columns)
 
     # If the user chose not to use the AI assistant and a file has been uploaded, they select the instruction and response columns
-    if processing_mode == "Without AI assistant" and uploaded_file is not None:
-        df_preview = pd.read_json(uploaded_file, lines=True, nrows=5)
+    elif processing_mode == "Without AI assistant" and uploaded_file is not None:
         instruction_column = st.selectbox('Select the instruction column', df_preview.columns)
         response_column = st.selectbox('Select the response column', df_preview.columns)
 
