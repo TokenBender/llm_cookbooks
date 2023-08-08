@@ -54,5 +54,6 @@ htmlcov/
 .cache
 .pytest_cache
 
-# Ignore dataset folder
+# Ignore dataset and ggml bins folder
 dataset/
+my_ggmls/

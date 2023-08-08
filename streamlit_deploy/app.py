@@ -38,12 +38,12 @@ headers = {
 
 # Function to combine instruction and response
 def combine_text(instruction, response):
-    combined_text = f"You are a helpful coding assistant.\n\n### Instruction:\n\n{instruction}\n\n### Response:\n\n{response}"
+    combined_text = f"You are a helpful coding assistant.\\n\\n### Instruction:\\n\\n{instruction}\\n\\n### Response:\\n\\n{response}"
     return combined_text
 
 # Function to check if a string contains Chinese characters
 def contains_chinese(text):
-    if re.search('[\u4e00-\u9fff]', text):
+    if re.search('[\\u4e00-\\u9fff]', text):
         return True
     return False
 
@@ -59,6 +59,10 @@ uploaded_file = st.file_uploader("Upload JSONL file", type=['jsonl'])
 # If a file has been uploaded
 if uploaded_file is not None:
     df_preview = pd.read_json(uploaded_file, lines=True, nrows=5)
+
+    # User selects the instruction and response columns
+    instruction_column = st.selectbox('Select the instruction column', df_preview.columns)
+    response_column = st.selectbox('Select the response column', df_preview.columns)
 
 # Form for user input
 with st.form(key='my_form'):
@@ -76,12 +80,6 @@ with st.form(key='my_form'):
         prompt = st.text_area('Enter the prompt for the assistant', 'You are a helpful coding assistant.')
         model_choice = st.selectbox('Select model', list(MODEL_MAP.keys()))
         MODEL = MODEL_MAP[model_choice]
-        user_message_column = st.selectbox('Select the user message column', df_preview.columns)
-
-    # If the user chose not to use the AI assistant and a file has been uploaded, they select the instruction and response columns
-    elif processing_mode == "Without AI assistant" and uploaded_file is not None:
-        instruction_column = st.selectbox('Select the instruction column', df_preview.columns)
-        response_column = st.selectbox('Select the response column', df_preview.columns)
 
     # User submits the form
     submit_button = st.form_submit_button(label='Submit')
@@ -91,8 +89,6 @@ if submit_button:
     # If the user uploaded a file
     if uploaded_file is not None:
         data_list = []
-        instruction_key = 'instruction'
-        response_key = 'output'
 
         # Loop through the lines in the file
         for i, line in enumerate(uploaded_file):
@@ -106,7 +102,7 @@ if submit_button:
             try:
                 record = json.loads(line)
                 # If the record does not contain Chinese characters, add it to the data list
-                if not contains_chinese(record[instruction_key]) and not contains_chinese(record[response_key]):
+                if not contains_chinese(record[instruction_column]) and not contains_chinese(record[response_column]):
                     data_list.append(record)
             except json.JSONDecodeError:
                 st.error(f"Failed to parse JSON on line {i}. Skipping this line.")
@@ -127,7 +123,7 @@ if submit_button:
                 progress_bar.progress((i + 1) / len(df))
 
                 # Submit the instruction as the user message
-                user_message = record[instruction_key]
+                user_message = record[instruction_column]
 
                 # Set system message
                 messages = [{'role': 'system', 'content': prompt}, {'role': 'user', 'content': user_message}]
@@ -152,10 +148,10 @@ if submit_button:
                     messages.append({'role': 'assistant', 'content': assistant_message})
 
                     # Update the record with the assistant's response
-                    df.at[i, response_key] = assistant_message
+                    df.at[i, response_column] = assistant_message
 
                     # Add the combined text field
-                    df.at[i, 'text'] = combine_text(record[instruction_key], assistant_message)
+                    df.at[i, 'text'] = combine_text(record[instruction_column], assistant_message)
 
                 # If parsing the response fails
                 except json.JSONDecodeError:
@@ -163,20 +159,18 @@ if submit_button:
 
         # If the user chose not to use the AI assistant
         else:
-            instruction_key = instruction_column
-            response_key = response_column
             for i, record in df.iterrows():
                 # Update the progress bar
                 progress_bar.progress((i + 1) / len(df))
 
                 # Combine the instruction and response into the "text" field
-                df.at[i, 'text'] = combine_text(record[instruction_key], record[response_key])
+                df.at[i, 'text'] = combine_text(record[instruction_column], record[response_column])
 
         # Display the updated DataFrame
         st.write(df)
 
         # Convert DataFrame to JSONLines string
-        jsonl = "\n".join(df.apply(lambda x: x.to_json(), axis=1))
+        jsonl = "\\n".join(df.apply(lambda x: x.to_json(), axis=1))
 
         # Encode JSONLines string to bytes, then to Base64
         b64 = base64.b64encode(jsonl.encode()).decode()
