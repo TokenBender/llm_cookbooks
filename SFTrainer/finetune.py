@@ -42,7 +42,7 @@ tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
 
 # Initialize wandb
-wandb.init(project="codellama34B_qlora", name="test")
+wandb.init(project=config['wandb_project_name'], name=config['wandb_run_name'])
 
 # Load training arguments
 training_arguments = TrainingArguments(**config['training_args'])
@@ -76,20 +76,6 @@ else:
     trainer.train()
 
 # Save the model
+print("Saving the model")
 model_to_save = trainer.model.module if hasattr(trainer.model, 'module') else trainer.model
 model_to_save.save_pretrained("outputs")
-
-# Load LoRA config from saved model
-lora_config = LoraConfig.from_pretrained('outputs')
-model = get_peft_model(model, lora_config)
-
-# Generate text (Your specific code here)
-text = '''###Instruction\nGenerate a python function to print fibonacci sequence iteratively. ###Response\n'''
-device = "cuda:0"
-inputs = tokenizer(text, return_tensors="pt", return_token_type_ids=False).to(device)
-outputs = model.generate(**inputs, max_new_tokens=2048)
-
-# Optionally push model to hub, only if enabled in config
-if config['push_to_hub']['enabled']:
-    model_name_for_hub = config['push_to_hub'].get('model_name', 'MyAwesomeModel')
-    model.push_to_hub(model_name_for_hub)
