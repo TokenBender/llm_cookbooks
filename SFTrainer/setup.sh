@@ -1,5 +1,4 @@
-pip install -q -U trl transformers accelerate git+https://github.com/huggingface/peft.git
-pip install -q -U datasets bitsandbytes einops scipy wandb sentencepiece
+pip install datasets>=1.17.0 torch>=1.4.0 tqdm transformers accelerate peft>=0.3.0 tyro>=0.5.7 trl wandb flash-attn bitsandbytes einops scipy sentencepiece
 git config --global credential.helper store
 huggingface-cli login
 wandb login
