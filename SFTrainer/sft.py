@@ -38,6 +38,7 @@ def initialize_model(config):
         device_map=device_map,
         trust_remote_code=config.get('trust_remote_code', False),
         torch_dtype=torch_dtype,
+        use_flash_attention_2=config.get('use_flash_attention2', False),
         use_auth_token=config.get('use_auth_token', True),
     )
 
