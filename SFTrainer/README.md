@@ -2,6 +2,9 @@
 
 This README provides a detailed explanation of the fine-tuning script and the accompanying `config.yml` configuration file.
 
+## Installation
+Run setup.sh, it will take care of setting HF, wandb api logins and other dependencies for installation
+
 ## Overview
 
 The script is designed to fine-tune a pre-trained causal language model (CLM) using the SFTTrainer from the Transformers library. The process involves loading a pre-trained model, preparing a dataset, setting up training arguments, and running the training process. The `config.yml` file is used to specify all the parameters required for fine-tuning.
