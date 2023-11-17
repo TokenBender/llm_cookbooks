@@ -1,0 +1,103 @@
+# Configuration for fine-tuning a Casual LM model with SFTTrainer
+
+# The name of the pre-trained model to be fine-tuned.
+# Default: "facebook/opt-350m". You can also use other models like "gpt2", "bert-base-uncased", etc.
+model_name: "PY007/TinyLlama-1.1B-intermediate-step-715k-1.5T"
+
+# The name of the dataset to be used for training.
+# Default: "timdettmers/openassistant-guanaco". Other public datasets on Hugging Face can also be used.
+dataset_name: "mlabonne/guanaco-llama2-1k"
+
+# The field in the dataset that contains the text data.
+# Default: "text". This depends on the structure of your dataset.
+dataset_text_field: "text"
+
+# The logging tool to be used.
+# Default: "none". Set to "wandb" to use Weights & Biases, if desired.
+log_with: "none"
+
+# The learning rate for the optimizer.
+# Default: 1.41e-5. Typical values range from 1e-5 to 5e-4.
+learning_rate: 1.41e-5
+
+# The batch size for training.
+# Default: 64. Can vary based on GPU memory, common values are 8, 16, 32, 64, etc.
+batch_size: 1
+
+# The input sequence length for the model.
+# Default: 512. Depends on the model's maximum context size, e.g., 1024 for larger GPT-2 models.
+seq_length: 512
+
+# The number of steps over which to accumulate gradients before updating model weights.
+# Default: 16. Can be adjusted based on memory constraints.
+gradient_accumulation_steps: 1
+
+# Whether to load the model in 8-bit precision to reduce memory usage.
+# Default: false. Set to true if you want to enable this feature.
+load_in_8bit: false
+
+# Whether to load the model in 4-bit precision for even more memory reduction.
+# Default: false. This is more experimental and might lead to a loss in precision.
+load_in_4bit: false
+
+# Whether to use Parameter-Efficient Fine-Tuning for training adapters.
+# Default: false. Set to true to enable PEFT.
+use_peft: false
+
+use_flash_attention: false
+
+# Whether to enable the execution of remote code when loading the model.
+# Default: false. For security, it's recommended to keep this as false.
+trust_remote_code: false
+
+# The directory where the model and training outputs will be saved.
+# Default: "output". Change to your preferred output directory.
+output_dir: "output"
+
+# The 'r' parameter for LoRA adapters if using PEFT.
+# Default: 64. Adjust based on model size and desired parameter efficiency.
+peft_lora_r: 64
+
+# The 'alpha' parameter for LoRA adapters if using PEFT.
+# Default: 16. Adjust according to the learning capacity you want to add.
+peft_lora_alpha: 16
+
+# The frequency of logging training metrics.
+# Default: 1. Increase if you want less frequent logging to reduce overhead.
+logging_steps: 1
+
+# Whether to use a Hugging Face authentication token.
+# Default: true. Set to false if you don't need to access private models or datasets.
+use_auth_token: false
+
+# The number of training epochs.
+# Default: 3. Adjust based on the size of the dataset and the desired convergence.
+num_train_epochs: 1
+
+# The total number of training steps. Overrides epochs if set to a positive number.
+# Default: -1 (use epochs). Set to a specific number to limit training to a fixed number of steps.
+max_steps: -1
+
+# The number of steps between saving model checkpoints.
+# Default: 100. Adjust based on training duration and frequency of evaluation.
+save_steps: 100
+
+# The maximum number of model checkpoints to keep.
+# Default: 10. Reduce or increase based on disk space and training length.
+save_total_limit: 10
+
+# Whether to push the trained model to the Hugging Face Hub.
+# Default: false. Set to true if you want to share your model with the community.
+push_to_hub: false
+
+# Whether to use gradient checkpointing.
+# Default: false. Set to true to reduce memory usage at the cost of a slight increase in training time.
+gradient_checkpointing: true
+
+# Keyword arguments for `torch.utils.checkpoint.checkpoint` if gradient checkpointing is used.
+# Default: null (none). Specify arguments like `use_reentrant=False` if needed.
+gradient_checkpointing_kwargs: null
+
+# The model ID on the Hugging Face Hub.
+# Default: null (none). Set to a specific model ID if pushing to the hub.
+hub_model_id: null
