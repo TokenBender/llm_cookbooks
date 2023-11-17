@@ -52,6 +52,7 @@ def create_training_args(config):
         gradient_accumulation_steps=config['gradient_accumulation_steps'],
         learning_rate=config['learning_rate'],
         logging_steps=config['logging_steps'],
+        optim=config['optimizer'],
         num_train_epochs=config['num_train_epochs'],
         max_steps=config.get('max_steps', -1),
         report_to=config.get('log_with', 'none'),
