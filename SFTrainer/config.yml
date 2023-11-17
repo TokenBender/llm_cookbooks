@@ -2,7 +2,7 @@
 
 # The name of the pre-trained model to be fine-tuned.
 # Default: "facebook/opt-350m". You can also use other models like "gpt2", "bert-base-uncased", etc.
-model_name: "PY007/TinyLlama-1.1B-intermediate-step-715k-1.5T"
+model_name: "microsoft/phi-1_5"
 
 # The name of the dataset to be used for training.
 # Default: "timdettmers/openassistant-guanaco". Other public datasets on Hugging Face can also be used.
@@ -48,7 +48,7 @@ use_flash_attention: false
 
 # Whether to enable the execution of remote code when loading the model.
 # Default: false. For security, it's recommended to keep this as false.
-trust_remote_code: false
+trust_remote_code: true
 
 # The directory where the model and training outputs will be saved.
 # Default: "output". Change to your preferred output directory.
@@ -74,6 +74,9 @@ use_auth_token: false
 # Default: 3. Adjust based on the size of the dataset and the desired convergence.
 num_train_epochs: 1
 
+# optimizer to be used in the training
+optimizer: "adamw_bnb_8bit"
+
 # The total number of training steps. Overrides epochs if set to a positive number.
 # Default: -1 (use epochs). Set to a specific number to limit training to a fixed number of steps.
 max_steps: -1
@@ -92,7 +95,7 @@ push_to_hub: false
 
 # Whether to use gradient checkpointing.
 # Default: false. Set to true to reduce memory usage at the cost of a slight increase in training time.
-gradient_checkpointing: true
+gradient_checkpointing: false
 
 # Keyword arguments for `torch.utils.checkpoint.checkpoint` if gradient checkpointing is used.
 # Default: null (none). Specify arguments like `use_reentrant=False` if needed.
